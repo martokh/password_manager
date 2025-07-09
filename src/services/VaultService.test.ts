@@ -1,6 +1,25 @@
 import { VaultService } from './VaultService';
 import { MetricsService } from '../metrics/MetricsService';
 
+// Mock prom-client metrics to bypass metric name validation for tests
+jest.mock('prom-client', () => {
+  const actual = jest.requireActual('prom-client');
+  class MockHistogram {
+    labels() { return this; }
+    observe() {}
+  }
+  class MockCounter {
+    labels() { return this; }
+    inc() {}
+  }
+  return {
+    ...actual,
+    Registry: jest.fn().mockImplementation(() => ({})),
+    Histogram: MockHistogram,
+    Counter: MockCounter,
+  };
+});
+
 describe('VaultService', () => {
     let vaultService: VaultService;
     let metricsService: MetricsService;

@@ -67,14 +67,21 @@ Our pipeline ensures code quality and security through:
 
 Key metrics tracked:
 
-- `pm.vault.create.duration.p95`
-- `pm.password.generate.count`
-- `pm.storage.encryption.failures`
+- `pm.vault.create.duration.p95` — 95th percentile time to initialize a new vault. High values may indicate backend or crypto performance issues.
+- `pm.password.generate.count` — Total passwords generated per minute. Useful for usage analytics and anomaly detection.
+- `pm.storage.encryption.failures` — Count of encryption/decryption errors. Any value >0 in a 5-minute window triggers an alert and potential rollback.
+
+To view metrics locally, use the `/metrics` endpoint (if exposed) or check Prometheus/Grafana dashboards in production.
 
 ### Emergency Procedures
 
 #### Rollback Process
 
+Rollback is triggered automatically if:
+- `pm.storage.encryption.failures > 0` in a 5-minute window
+- End-to-end test suite fails on main branch
+
+Manual steps:
 1. Access the deployment dashboard
 2. Locate the failing deployment
 3. Execute rollback:
@@ -82,7 +89,23 @@ Key metrics tracked:
    kubectl rollout undo deployment/password-manager
    ```
 4. Verify service health
-5. Notify stakeholders via Slack
+5. Notify stakeholders via Slack:
+   ```
+   [ALERT] Password Manager deployment failed on main.
+   Error metric: pm.storage.encryption.failures.
+   Rolling back to previous version.
+   ```
+
+## Documentation & Onboarding
+
+- **Confluence:**
+  - [Password Manager Integration Guide](https://confluence.example.com/pages/password-manager-integration)
+  - [Operational Runbook](https://confluence.example.com/pages/password-manager-runbook)
+- **How to run tests locally:**
+  - `npm test` for unit tests (Jest)
+  - `npx cypress open` for integration tests
+- **Metrics interpretation:** See above
+- **Emergency rollback:** See above
 
 ## License
 

@@ -60,6 +60,26 @@ app.get('/metrics', async (_req: Request, res: Response) => {
   res.send(metrics);
 });
 
+// Add a default web page for user experience
+app.get('/', (_req: Request, res: Response) => {
+  res.send(`
+    <html>
+      <head>
+        <title>Password Manager API</title>
+      </head>
+      <body style="font-family: sans-serif; text-align: center; margin-top: 5em;">
+        <h1>🔐 Personal Password Manager</h1>
+        <p>Welcome! The API is running.</p>
+        <ul style="list-style: none; padding: 0;">
+          <li><a href='/health'>Health Check</a></li>
+          <li><a href='/metrics'>Metrics</a></li>
+        </ul>
+        <p>Use <code>/vaults</code> and <code>/passwords/generate</code> endpoints with an API client (curl, Postman, etc).</p>
+      </body>
+    </html>
+  `);
+});
+
 // Create vault endpoint
 app.post('/vaults', async (req: Request, res: Response) => {
   try {

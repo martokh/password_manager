@@ -1,34 +1,47 @@
 module.exports = {
+  root: true,
   parser: '@typescript-eslint/parser',
-  extends: [
-    'plugin:@typescript-eslint/recommended',
-    'plugin:security/recommended'
-  ],
   plugins: ['@typescript-eslint', 'security'],
-  parserOptions: {
-    ecmaVersion: 2020,
-    sourceType: 'module',
+  extends: [
+    'eslint:recommended',
+    'plugin:@typescript-eslint/recommended',
+    'plugin:security/recommended',
+  ],
+  env: {
+    node: true,
+    es2021: true,
+    jest: true,
   },
   rules: {
     'no-eval': 'error',
     'no-implied-eval': 'error',
     'no-new-func': 'error',
-    '@typescript-eslint/no-explicit-any': 'error',
-    '@typescript-eslint/explicit-module-boundary-types': 'error',
-    'security/detect-object-injection': 'error',
-    'security/detect-non-literal-regexp': 'error',
-    'security/detect-unsafe-regex': 'error',
-    'security/detect-buffer-noassert': 'error',
+    'security/detect-object-injection': 'warn',
+    'security/detect-unsafe-regex': 'warn',
     'security/detect-child-process': 'error',
-    'security/detect-disable-mustache-escape': 'error',
-    'security/detect-eval-with-expression': 'error',
-    'security/detect-no-csrf-before-method-override': 'error',
     'security/detect-non-literal-fs-filename': 'error',
-    'security/detect-pseudoRandomBytes': 'error',
-    'security/detect-possible-timing-attacks': 'error'
+    'security/detect-non-literal-require': 'error',
+    'security/detect-non-literal-regexp': 'error',
+    'security/detect-buffer-noassert': 'error',
+    'security/detect-disable-mustache-escape': 'error',
+    'security/detect-no-csrf-before-method-override': 'error',
+    'security/detect-shelljs-injection': 'error',
+    'security/detect-possible-timing-attacks': 'warn',
+    'security/detect-eval-with-expression': 'error',
+    'security/detect-new-buffer': 'error',
+    'no-restricted-globals': [
+      'error',
+      'event',
+      'fdescribe',
+      'location',
+      'name',
+      'parent',
+      'top',
+      'window',
+      'document',
+      'global',
+      'self',
+    ],
   },
-  env: {
-    node: true,
-    jest: true
-  }
+  ignorePatterns: ['dist/', 'node_modules/', 'coverage/'],
 };

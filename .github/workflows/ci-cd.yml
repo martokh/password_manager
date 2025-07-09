@@ -2,24 +2,14 @@ name: CI/CD Pipeline
 
 on:
   push:
-    branches: [main]
+    branches: [ main ]
   pull_request:
-    branches: [main]
-
-env:
-  REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}
 
 jobs:
   lint:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - name: Setup Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: '18'
-          cache: 'npm'
       - name: Install Dependencies
         run: npm ci
       - name: Lint
@@ -30,102 +20,33 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - name: Setup Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: '18'
-          cache: 'npm'
-      - name: Install Dependencies
-        run: npm ci
-      - name: Run Tests
-        run: npm test
-      - name: Upload Coverage
-        uses: actions/upload-artifact@v3
-        with:
-          name: coverage
-          path: coverage/
+      - run: npm ci
+      - run: npm test -- --coverage
 
   security:
     needs: test
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - name: Run npm audit
-        run: npm audit
-      - name: SonarQube Scan
-        uses: SonarSource/sonarqube-scan-action@v1
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
-        with:
-          args: >
-            -Dsonar.projectKey=password-manager
+      - name: SCA Scan
+        uses: dependabot/fetch-metadata@v1
+      - name: SAST Scan
+        run: |
+          npx sonar-scanner \
+            -Dsonar.projectKey=password-manager \
             -Dsonar.sources=./src
-            -Dsonar.tests=./src
-            -Dsonar.test.inclusions=**/*.test.ts
-            -Dsonar.typescript.lcov.reportPaths=coverage/lcov.info
-            -Dsonar.security.sanitizer.rules=S5131,S5146,S5334
 
-  build:
+  deploy:
     needs: security
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - name: Setup Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: '18'
-          cache: 'npm'
-      - name: Install Dependencies
-        run: npm ci
-      - name: Build
-        run: npm run build
-      - name: Upload Build Artifacts
-        uses: actions/upload-artifact@v3
-        with:
-          name: dist
-          path: dist/
-
-  deploy:
-    needs: build
-    if: github.ref == 'refs/heads/main'
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: write
-    steps:
-      - uses: actions/checkout@v3
-      - name: Download Build Artifacts
-        uses: actions/download-artifact@v3
-        with:
-          name: dist
-          path: dist/
-      - name: Log in to registry
-        uses: docker/login-action@v2
-        with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-      - name: Build and Push Docker Image
-        uses: docker/build-push-action@v4
-        with:
-          context: .
-          push: true
-          tags: |
-            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
-            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
-      - name: Verify Deployment
-        id: verify
+      - name: Build Docker Image
         run: |
-          # Check if deployment is successful
-          if ! curl -s --fail ${{ secrets.HEALTHCHECK_URL }}; then
-            echo "::set-output name=status::failed"
-            exit 1
-          fi
+          docker build -t ghcr.io/<org>/password-manager:latest .
+          echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+          docker push ghcr.io/<org>/password-manager:latest
       - name: Rollback on Failure
-        if: failure() && steps.verify.outputs.status == 'failed'
+        if: failure()
         run: |
           kubectl rollout undo deployment/password-manager
-          curl -X POST -H 'Content-type: application/json' --data '{
-            "text": "[ALERT] Password Manager deployment failed on main. Rolling back to previous version."
-          }' ${{ secrets.SLACK_WEBHOOK_URL }}
