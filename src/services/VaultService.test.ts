@@ -1,5 +1,6 @@
 import { VaultService } from './VaultService';
 import { MetricsService } from '../metrics/MetricsService';
+import * as crypto from 'crypto';
 
 // Mock prom-client metrics to bypass metric name validation for tests
 jest.mock('prom-client', () => {
@@ -48,7 +49,7 @@ describe('VaultService', () => {
 
         it('should record metrics on error during vault creation', async () => {
             // Simulate error by mocking pbkdf2Sync to throw
-            jest.spyOn(require('crypto'), 'pbkdf2Sync').mockImplementation(() => { throw new Error('fail'); });
+            jest.spyOn(crypto, 'pbkdf2Sync').mockImplementation(() => { throw new Error('fail'); });
             const spy = jest.spyOn(metricsService, 'recordVaultCreation');
             await expect(vaultService.createVault('user', 'pass')).rejects.toThrow('fail');
             expect(spy).toHaveBeenCalledWith(expect.any(Number), 'error');
@@ -85,7 +86,7 @@ describe('VaultService', () => {
         });
 
         it('should throw error if randomBytes fails', () => {
-            jest.spyOn(require('crypto'), 'randomBytes').mockImplementation(() => { throw new Error('fail'); });
+            jest.spyOn(crypto, 'randomBytes').mockImplementation(() => { throw new Error('fail'); });
             expect(() => vaultService.generatePassword()).toThrow('Failed to generate password');
             jest.restoreAllMocks();
         });

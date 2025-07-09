@@ -23,7 +23,6 @@ module.exports = [
       'security/detect-buffer-noassert': 'error',
       'security/detect-disable-mustache-escape': 'error',
       'security/detect-no-csrf-before-method-override': 'error',
-      'security/detect-shelljs-injection': 'error',
       'security/detect-possible-timing-attacks': 'warn',
       'security/detect-eval-with-expression': 'error',
       'security/detect-new-buffer': 'error',

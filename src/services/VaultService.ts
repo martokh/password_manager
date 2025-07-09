@@ -26,7 +26,7 @@ export class VaultService {
     try {
       // Generate vault key
       const salt = crypto.randomBytes(32);
-      const key = crypto.pbkdf2Sync(masterPassword, salt, 100000, 32, 'sha256');
+      crypto.pbkdf2Sync(masterPassword, salt, 100000, 32, 'sha256');
       const vaultId = crypto.randomUUID();
 
       // Record metrics

@@ -5,6 +5,7 @@ import { VaultService } from './services/VaultService';
 import { randomUUID } from 'crypto';
 
 // Extend Express Request type to include our custom properties
+/* eslint-disable @typescript-eslint/no-namespace */
 declare global {
   namespace Express {
     interface Request {
@@ -12,6 +13,7 @@ declare global {
     }
   }
 }
+/* eslint-enable @typescript-eslint/no-namespace */
 
 // Initialize services
 const logger = pino({
