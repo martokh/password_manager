@@ -1,8 +1,8 @@
-import js from '@eslint/js';
-import tseslint from 'typescript-eslint';
-import security from 'eslint-plugin-security';
+const js = require('@eslint/js');
+const tseslint = require('typescript-eslint');
+const security = require('eslint-plugin-security');
 
-export default [
+module.exports = [
   js.configs.recommended,
   ...tseslint.configs.recommended,
   {
